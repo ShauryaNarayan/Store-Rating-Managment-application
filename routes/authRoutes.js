@@ -1,9 +1,8 @@
-// backend/routes/authRoutes.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../database.js');
-const { JWT_SECRET } = require('../middleware/authMiddleware.js');
+const { JWT_SECRET, verifyToken } = require('../middleware/authMiddleware.js'); // Added verifyToken
 
 const router = express.Router();
 
@@ -30,7 +29,6 @@ router.post('/signup', (req, res) => {
 
     db.run(sql, params, function (err) {
         if (err) {
-            // Check for unique email constraint
             if (err.message.includes("UNIQUE constraint failed")) {
                 return res.status(400).json({ error: "Email already registered." });
             }
@@ -52,22 +50,19 @@ router.post('/login', (req, res) => {
     db.get(sql, [email], (err, user) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        // 1. Check if user exists
         if (!user) {
             return res.status(404).json({ error: "User not found." });
         }
 
-        // 2. Check Password
         const passwordIsValid = bcrypt.compareSync(password, user.password);
         if (!passwordIsValid) {
             return res.status(401).json({ error: "Invalid password." });
         }
 
-        // 3. Generate Token
         const token = jwt.sign(
-            { id: user.id, role: user.role, name: user.name }, // Payload
+            { id: user.id, role: user.role, name: user.name },
             JWT_SECRET,
-            { expiresIn: '24h' } // Token Valid for 24 hours
+            { expiresIn: '24h' }
         );
 
         res.json({
@@ -81,6 +76,33 @@ router.post('/login', (req, res) => {
             }
         });
     });
+});
+
+// --- UPDATE PASSWORD (New Feature) ---
+router.patch('/update-password', verifyToken, (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!newPassword.match(/^(?=.*[A-Z])(?=.*[!@#$&*]).{8,16}$/)) {
+        return res.status(400).json({ error: "New password must be 8-16 chars, 1 Upper, 1 Special" });
+    }
+
+    try {
+        db.get("SELECT password FROM Users WHERE id = ?", [userId], (err, row) => {
+            if (err || !row) return res.status(404).json({ error: "User not found" });
+
+            const match = bcrypt.compareSync(oldPassword, row.password);
+            if (!match) return res.status(400).json({ error: "Incorrect old password" });
+
+            const hashedNew = bcrypt.hashSync(newPassword, 10);
+            db.run("UPDATE Users SET password = ? WHERE id = ?", [hashedNew, userId], (err) => {
+                if (err) return res.status(500).json({ error: "Update failed" });
+                res.json({ message: "Password updated successfully!" });
+            });
+        });
+    } catch (e) {
+        res.status(500).json({ error: "Server error" });
+    }
 });
 
 module.exports = router;
