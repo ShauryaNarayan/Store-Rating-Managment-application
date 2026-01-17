@@ -44,6 +44,9 @@ GET /api/admin/dashboard - View total stats
 POST /api/admin/users - Create a new user
 POST /api/admin/stores - Create a new store
 
+
+Vercel Published Link: https://store-rating-managment-application-lime.vercel.app/
+
 User Routes:
 GET /api/user/stores - View and search stores
 POST /api/user/rating - Submit a rating
