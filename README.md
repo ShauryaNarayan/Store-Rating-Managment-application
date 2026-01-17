@@ -26,11 +26,11 @@ Password: Admin@123
 
 Role: Store Owner
 Email: owner@apple.com
-Password: Owner@123
+Password: Apple@12345
 
 Role: Normal User
-Email: alice@gmail.com
-Password: Alice@123
+Email: shauryan240701@gmail.com
+Password: Wolverine@2001
 
 API ENDPOINTS
 
@@ -45,7 +45,6 @@ POST /api/admin/users - Create a new user
 POST /api/admin/stores - Create a new store
 
 
-Vercel Published Link: https://store-rating-managment-application-lime.vercel.app/
 
 User Routes:
 GET /api/user/stores - View and search stores
@@ -53,3 +52,6 @@ POST /api/user/rating - Submit a rating
 
 Owner Routes:
 GET /api/owner/dashboard - View store stats
+
+
+Vercel Published Link: https://store-rating-managment-application-lime.vercel.app/
